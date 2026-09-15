@@ -1,0 +1,29 @@
+commodities:
+  small_cardamom:
+    name: "Small Cardamom"
+    scientific_name: "Elettaria cardamomum"
+    group: "Cardamom"
+    hs_code: "090831"
+    unit: "INR/kg"
+    base_price: 1850.0
+  black_pepper:
+    name: "Black Pepper"
+    scientific_name: "Piper nigrum"
+    group: "Pepper"
+    hs_code: "090411"
+    unit: "INR/kg"
+    base_price: 580.0
+  nutmeg:
+    name: "Nutmeg"
+    scientific_name: "Myristica fragrans"
+    group: "Tree Spices"
+    hs_code: "090811"
+    unit: "INR/kg"
+    base_price: 320.0
+  cloves:
+    name: "Cloves"
+    scientific_name: "Syzygium aromaticum"
+    group: "Tree Spices"
+    hs_code: "090710"
+    unit: "INR/kg"
+    base_price: 880.0

@@ -1,0 +1,28 @@
+sources:
+  spices_board:
+    organization: "Spices Board of India"
+    dataset_name: "Daily E-Auction Price & Arrival Statistics"
+    url: "https://www.indianspices.com"
+    signature: "date|auctioneer|lots|arrived|sold|min|max|avg"
+    type: "OFFICIAL_COMMODITY_BOARD"
+  era5:
+    organization: "ECMWF / Copernicus"
+    dataset_name: "ERA5-Land Hourly & Daily Reanalysis"
+    url: "https://cds.climate.copernicus.eu"
+    type: "CLIMATE_REANALYSIS"
+    baseline_period: "1991-2020"
+  faostat:
+    organization: "Food and Agriculture Organization (FAO)"
+    dataset_name: "FAOSTAT Crops Production & Food Balances"
+    url: "https://www.fao.org/faostat"
+    type: "INTERGOVERNMENTAL_PRIMARY"
+  comtrade:
+    organization: "UN Statistics Division"
+    dataset_name: "UN Comtrade Database"
+    url: "https://comtradeplus.un.org"
+    type: "INTERGOVERNMENTAL_PRIMARY"
+  des_india:
+    organization: "Directorate of Economics & Statistics (DES)"
+    dataset_name: "Agricultural Statistics at a Glance"
+    url: "https://eands.dacnet.nic.in"
+    type: "GOVERNMENT_MINISTRY"

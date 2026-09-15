@@ -1,0 +1,131 @@
+{
+  "spices": [
+    {
+      "code": "small_cardamom",
+      "name": "Small Cardamom",
+      "commodity_group": "Cardamom",
+      "scientific_name": "Elettaria cardamomum",
+      "description": "True cardamom or green cardamom, majorly cultivated in the cardamom hills of Idukki, Kerala and Western Ghats.",
+      "active": 1
+    },
+    {
+      "code": "black_pepper",
+      "name": "Black Pepper",
+      "commodity_group": "Pepper",
+      "scientific_name": "Piper nigrum",
+      "description": "King of spices, indigenous to Kerala and Malabar Coast.",
+      "active": 1
+    },
+    {
+      "code": "nutmeg",
+      "name": "Nutmeg",
+      "commodity_group": "Tree Spices",
+      "scientific_name": "Myristica fragrans",
+      "description": "Nutmeg seed kernel, produced in Kerala and coastal Karnataka.",
+      "active": 1
+    },
+    {
+      "code": "cloves",
+      "name": "Cloves",
+      "commodity_group": "Tree Spices",
+      "scientific_name": "Syzygium aromaticum",
+      "description": "Aromatic dried flower buds of the clove tree, cultivated in Idukki, Kottayam, Kanyakumari and Western Ghats slopes.",
+      "active": 1
+    }
+  ],
+  "countries": [
+    { "iso2": "IN", "iso3": "IND", "name": "India" },
+    { "iso2": "GT", "iso3": "GTM", "name": "Guatemala" },
+    { "iso2": "VN", "iso3": "VNM", "name": "Vietnam" },
+    { "iso2": "ID", "iso3": "IDN", "name": "Indonesia" },
+    { "iso2": "MG", "iso3": "MDG", "name": "Madagascar" },
+    { "iso2": "LK", "iso3": "LKA", "name": "Sri Lanka" },
+    { "iso2": "BR", "iso3": "BRA", "name": "Brazil" },
+    { "iso2": "US", "iso3": "USA", "name": "United States" },
+    { "iso2": "AE", "iso3": "ARE", "name": "United Arab Emirates" },
+    { "iso2": "SA", "iso3": "SAU", "name": "Saudi Arabia" }
+  ],
+  "regions": [
+    { "country_iso3": "IND", "region_type": "STATE", "name": "Kerala", "latitude": 10.8505, "longitude": 76.2711 },
+    { "country_iso3": "IND", "region_type": "DISTRICT", "name": "Idukki", "parent_name": "Kerala", "latitude": 9.8494, "longitude": 76.9804 },
+    { "country_iso3": "IND", "region_type": "DISTRICT", "name": "Kottayam", "parent_name": "Kerala", "latitude": 9.5916, "longitude": 76.5222 },
+    { "country_iso3": "IND", "region_type": "DISTRICT", "name": "Wayanad", "parent_name": "Kerala", "latitude": 11.6854, "longitude": 76.1320 },
+    { "country_iso3": "IND", "region_type": "STATE", "name": "Karnataka", "latitude": 15.3173, "longitude": 75.7139 },
+    { "country_iso3": "IND", "region_type": "STATE", "name": "Tamil Nadu", "latitude": 11.1271, "longitude": 78.6569 },
+    { "country_iso3": "GTM", "region_type": "PROVINCE", "name": "Alta Verapaz", "latitude": 15.5000, "longitude": -90.2500 },
+    { "country_iso3": "VNM", "region_type": "PROVINCE", "name": "Dak Lak", "latitude": 12.6667, "longitude": 108.0500 },
+    { "country_iso3": "IDN", "region_type": "PROVINCE", "name": "Maluku", "latitude": -3.2385, "longitude": 130.1453 }
+  ],
+  "markets": [
+    { "name": "Bodinayakanur", "region_name": "Tamil Nadu", "latitude": 10.0104, "longitude": 77.3499, "market_type": "AUCTION_HUB" },
+    { "name": "Vandanmettu", "region_name": "Idukki", "latitude": 9.7712, "longitude": 77.1264, "market_type": "AUCTION_CENTRE" },
+    { "name": "Kumily", "region_name": "Idukki", "latitude": 9.6083, "longitude": 77.1658, "market_type": "LOCAL_MARKET" },
+    { "name": "Nedumkandam", "region_name": "Idukki", "latitude": 9.8333, "longitude": 77.1667, "market_type": "LOCAL_MARKET" },
+    { "name": "Kochi", "region_name": "Kerala", "latitude": 9.9312, "longitude": 76.2673, "market_type": "TERMINAL_PORT" },
+    { "name": "Kottayam", "region_name": "Kottayam", "latitude": 9.5916, "longitude": 76.5222, "market_type": "SPICE_MARKET" },
+    { "name": "Kalpetta", "region_name": "Wayanad", "latitude": 11.6085, "longitude": 76.0827, "market_type": "LOCAL_MARKET" }
+  ],
+  "grades": [
+    { "spice_code": "small_cardamom", "name": "AGEB (8mm+)", "description": "Alleppey Green Extra Bold, minimum diameter 8.0mm" },
+    { "spice_code": "small_cardamom", "name": "AGB (7-8mm)", "description": "Alleppey Green Bold, 7.0mm to 8.0mm diameter" },
+    { "spice_code": "small_cardamom", "name": "Bulk / Unsorted", "description": "Mixed grade auction lots" },
+    { "spice_code": "black_pepper", "name": "Garbled (550 GL)", "description": "High density cleaned black pepper" },
+    { "spice_code": "black_pepper", "name": "Ungarbled", "description": "Farm-gate uncleaned black pepper" },
+    { "spice_code": "nutmeg", "name": "With Shell", "description": "Nutmeg in shell" },
+    { "spice_code": "nutmeg", "name": "Without Shell (Kernel)", "description": "Shelled nutmeg kernels" },
+    { "spice_code": "cloves", "name": "Handpicked Bold", "description": "Prime headless whole dried flower buds" },
+    { "spice_code": "cloves", "name": "Standard FAQ", "description": "Fair Average Quality whole cloves" }
+  ],
+  "sources": [
+    {
+      "organization": "Spices Board of India",
+      "dataset_name": "Daily E-Auction Price & Arrival Statistics",
+      "source_url": "https://www.indianspices.com",
+      "source_type": "OFFICIAL_COMMODITY_BOARD",
+      "license": "Government Open Data",
+      "retrieved_at": "2026-09-16T00:00:00Z",
+      "dataset_version": "v2026.09",
+      "methodology_url": "https://www.indianspices.com/marketing/e-auction-guidelines"
+    },
+    {
+      "organization": "ECMWF / Copernicus",
+      "dataset_name": "ERA5-Land Hourly & Daily Reanalysis",
+      "source_url": "https://cds.climate.copernicus.eu",
+      "source_type": "CLIMATE_REANALYSIS",
+      "license": "Copernicus Open Access",
+      "retrieved_at": "2026-09-16T00:00:00Z",
+      "dataset_version": "ERA5-Land",
+      "methodology_url": "https://confluence.ecmwf.int/display/CKB/ERA5-Land"
+    },
+    {
+      "organization": "Food and Agriculture Organization (FAO)",
+      "dataset_name": "FAOSTAT Crops Production & Food Balances",
+      "source_url": "https://www.fao.org/faostat",
+      "source_type": "INTERGOVERNMENTAL_PRIMARY",
+      "license": "CC BY-NC-SA 3.0 IGO",
+      "retrieved_at": "2026-09-16T00:00:00Z",
+      "dataset_version": "FAOSTAT 2025.1",
+      "methodology_url": "https://www.fao.org/faostat/en/#definitions"
+    },
+    {
+      "organization": "UN Statistics Division",
+      "dataset_name": "UN Comtrade Database",
+      "source_url": "https://comtradeplus.un.org",
+      "source_type": "INTERGOVERNMENTAL_PRIMARY",
+      "license": "UN Data License",
+      "retrieved_at": "2026-09-16T00:00:00Z",
+      "dataset_version": "HS2017/HS2022",
+      "methodology_url": "https://comtradeplus.un.org/Home/About"
+    },
+    {
+      "organization": "Directorate of Economics & Statistics (DES)",
+      "dataset_name": "Agricultural Statistics at a Glance - Area, Production & Yield",
+      "source_url": "https://eands.dacnet.nic.in",
+      "source_type": "GOVERNMENT_MINISTRY",
+      "license": "Open Government Data (OGD) India",
+      "retrieved_at": "2026-09-16T00:00:00Z",
+      "dataset_version": "DES 2025",
+      "methodology_url": "https://eands.dacnet.nic.in/methodology.htm"
+    }
+  ]
+}

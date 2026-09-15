@@ -1,0 +1,21 @@
+geographies:
+  target_district:
+    name: "Idukki"
+    state: "Kerala"
+    country: "India"
+    iso3: "IND"
+    lat: 9.8494
+    lon: 76.9804
+    elevation_m: 1200
+  state:
+    name: "Kerala"
+    country: "India"
+    iso3: "IND"
+  country:
+    name: "India"
+    iso3: "IND"
+  top_producers:
+    small_cardamom: ["IND", "GTM"]
+    large_cardamom: ["IND", "NPL", "BTN"]
+    black_pepper: ["VNM", "BRA", "IND", "IDN"]
+    nutmeg: ["IDN", "IND", "GRD"]
