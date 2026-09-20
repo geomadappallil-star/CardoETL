@@ -32,6 +32,7 @@ class DataQualityValidator:
 
     def validate_price_records(self, records: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
         valid = []
+        rejected = []
         seen = set()
 
         for rec in records:
@@ -42,7 +43,9 @@ class DataQualityValidator:
             if key in seen:
                 self.stats["duplicate_count"] += 1
                 self.stats["rows_rejected"] += 1
-                self.rejected_records.append({"record": rec, "reason": "Duplicate key observation"})
+                entry = {"record": rec, "reason": "Duplicate key observation"}
+                self.rejected_records.append(entry)
+                rejected.append(entry)
                 continue
             seen.add(key)
 
@@ -56,14 +59,18 @@ class DataQualityValidator:
             if avg_price is None or avg_price <= 0:
                 self.stats["negative_price_count"] += 1
                 self.stats["rows_rejected"] += 1
-                self.rejected_records.append({"record": rec, "reason": "Non-positive average price"})
+                entry = {"record": rec, "reason": "Non-positive average price"}
+                self.rejected_records.append(entry)
+                rejected.append(entry)
                 continue
 
             if min_price is not None and max_price is not None:
                 if min_price > max_price:
                     self.stats["invalid_spread_count"] += 1
                     self.stats["rows_rejected"] += 1
-                    self.rejected_records.append({"record": rec, "reason": f"min_price ({min_price}) > max_price ({max_price})"})
+                    entry = {"record": rec, "reason": f"min_price ({min_price}) > max_price ({max_price})"}
+                    self.rejected_records.append(entry)
+                    rejected.append(entry)
                     continue
 
             # Quantity assertions
@@ -71,16 +78,19 @@ class DataQualityValidator:
                 if sold > arrived:
                     self.stats["invalid_quantity_count"] += 1
                     self.stats["rows_rejected"] += 1
-                    self.rejected_records.append({"record": rec, "reason": f"quantity_sold ({sold}) > quantity_arrived ({arrived})"})
+                    entry = {"record": rec, "reason": f"quantity_sold ({sold}) > quantity_arrived ({arrived})"}
+                    self.rejected_records.append(entry)
+                    rejected.append(entry)
                     continue
 
             valid.append(rec)
             self.stats["rows_loaded"] += 1
 
-        return valid, self.rejected_records
+        return valid, rejected
 
     def validate_weather_records(self, records: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
         valid = []
+        rejected = []
         for rec in records:
             self.stats["rows_read"] += 1
             rainfall = rec.get("rainfall_mm", 0)
@@ -89,15 +99,19 @@ class DataQualityValidator:
 
             if rainfall < 0:
                 self.stats["rows_rejected"] += 1
-                self.rejected_records.append({"record": rec, "reason": "Negative rainfall value"})
+                entry = {"record": rec, "reason": "Negative rainfall value"}
+                self.rejected_records.append(entry)
+                rejected.append(entry)
                 continue
 
             if tmin is not None and tmax is not None and tmin > tmax:
                 self.stats["rows_rejected"] += 1
-                self.rejected_records.append({"record": rec, "reason": f"tmin ({tmin}) > tmax ({tmax})"})
+                entry = {"record": rec, "reason": f"tmin ({tmin}) > tmax ({tmax})"}
+                self.rejected_records.append(entry)
+                rejected.append(entry)
                 continue
 
             valid.append(rec)
             self.stats["rows_loaded"] += 1
 
-        return valid, self.rejected_records
+        return valid, rejected

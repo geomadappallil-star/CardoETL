@@ -26,15 +26,17 @@ IDUKKI_MONTHLY_BASELINE_MM = {
     12: 48.0,
 }
 
-def generate_idukki_weather() -> List[Dict[str, Any]]:
-    rng = random.Random(88)
-    start_date = date(2016, 1, 1)
-    end_date = date(2026, 9, 15)
+def generate_idukki_weather(start_date: date = None, end_date: date = None) -> List[Dict[str, Any]]:
+    if start_date is None:
+        start_date = date(2016, 1, 1)
+    if end_date is None:
+        end_date = date(2026, 9, 15)
 
     weather_records = []
     curr = start_date
 
     while curr <= end_date:
+        rng = random.Random(int(curr.strftime("%Y%m%d")) + 88)
         m = curr.month
         y = curr.year
         days_in_m = calendar.monthrange(y, m)[1]

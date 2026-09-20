@@ -1,0 +1,44 @@
+name: Daily Spice Intelligence ETL
+
+on:
+  schedule:
+    # Runs daily at 18:30 UTC (00:00 midnight IST), right after daytime auctions finalize
+    - cron: '30 18 * * *'
+  workflow_dispatch: # Allows 1-click manual trigger anytime from GitHub Actions tab
+
+concurrency:
+  group: daily-etl-pipeline
+  cancel-in-progress: false
+
+jobs:
+  daily-etl:
+    name: Extract, Validate & Ingest Spices Board & Weather Feeds
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Execute Daily ETL Pipeline
+        env:
+          SUPABASE_DB_HOST: ${{ secrets.SUPABASE_DB_HOST }}
+          SUPABASE_DB_PORT: ${{ secrets.SUPABASE_DB_PORT }}
+          SUPABASE_DB_USER: ${{ secrets.SUPABASE_DB_USER }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_DB_NAME: ${{ secrets.SUPABASE_DB_NAME }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          python run_daily.py

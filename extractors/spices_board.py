@@ -46,15 +46,17 @@ def get_macro_cardamom_base_price(current_date: date) -> float:
 
     return base
 
-def generate_spices_board_auctions() -> List[Dict[str, Any]]:
-    rng = random.Random(42)
-    start_date = date(2016, 1, 1)
-    end_date = date(2026, 9, 15)
+def generate_spices_board_auctions(start_date: date = None, end_date: date = None) -> List[Dict[str, Any]]:
+    if start_date is None:
+        start_date = date(2016, 1, 1)
+    if end_date is None:
+        end_date = date(2026, 9, 15)
     
     price_records = []
     curr = start_date
 
     while curr <= end_date:
+        rng = random.Random(int(curr.strftime("%Y%m%d")) + 42)
         weekday = curr.weekday() # 0 = Mon, 6 = Sun
         # Small Cardamom Auctions Monday - Saturday
         if weekday != 6:
@@ -103,6 +105,8 @@ def generate_spices_board_auctions() -> List[Dict[str, Any]]:
 
                 # 1. Black Pepper (Kochi spot)
                 pepper_base = 480.0 + 70.0 * math.sin(t * 1.5) + (t - 2016.0) * 12.0 + rng.uniform(-15, 15)
+                pep_arrived = round(rng.uniform(12000, 35000), 1)
+                pep_sold = round(pep_arrived * rng.uniform(0.85, 0.98), 1)
                 price_records.append({
                     "spice_code": "black_pepper",
                     "date": curr.isoformat(),
@@ -115,8 +119,8 @@ def generate_spices_board_auctions() -> List[Dict[str, Any]]:
                     "avg_price": round(pepper_base, 2),
                     "currency": "INR",
                     "unit": "INR/kg",
-                    "quantity": round(rng.uniform(12000, 35000), 1),
-                    "quantity_sold": round(rng.uniform(10000, 32000), 1),
+                    "quantity": pep_arrived,
+                    "quantity_sold": pep_sold,
                     "quantity_unit": "kg",
                     "source_id": 1,
                     "source_record_id": f"SPOT-BP-{curr.isoformat()}",
@@ -125,6 +129,8 @@ def generate_spices_board_auctions() -> List[Dict[str, Any]]:
 
                 # 2. Nutmeg (Kalpetta spot)
                 nutmeg_base = 280.0 + 35.0 * math.cos(t * 1.8) + (t - 2016.0) * 8.0 + rng.uniform(-10, 10)
+                nut_arrived = round(rng.uniform(5000, 15000), 1)
+                nut_sold = round(nut_arrived * rng.uniform(0.85, 0.98), 1)
                 price_records.append({
                     "spice_code": "nutmeg",
                     "date": curr.isoformat(),
@@ -137,8 +143,8 @@ def generate_spices_board_auctions() -> List[Dict[str, Any]]:
                     "avg_price": round(nutmeg_base, 2),
                     "currency": "INR",
                     "unit": "INR/kg",
-                    "quantity": round(rng.uniform(5000, 15000), 1),
-                    "quantity_sold": round(rng.uniform(4500, 14000), 1),
+                    "quantity": nut_arrived,
+                    "quantity_sold": nut_sold,
                     "quantity_unit": "kg",
                     "source_id": 1,
                     "source_record_id": f"SPOT-NM-{curr.isoformat()}",
@@ -148,6 +154,8 @@ def generate_spices_board_auctions() -> List[Dict[str, Any]]:
                 # 3. Cloves (Kottayam / Kochi spot market)
                 # Cloves spot prices range from ₹740 to ₹1,180 / kg
                 cloves_base = 780.0 + 95.0 * math.sin(t * 1.2) + (t - 2016.0) * 18.0 + rng.uniform(-18, 18)
+                clv_arrived = round(rng.uniform(4000, 12000), 1)
+                clv_sold = round(clv_arrived * rng.uniform(0.85, 0.98), 1)
                 price_records.append({
                     "spice_code": "cloves",
                     "date": curr.isoformat(),
@@ -160,8 +168,8 @@ def generate_spices_board_auctions() -> List[Dict[str, Any]]:
                     "avg_price": round(cloves_base, 2),
                     "currency": "INR",
                     "unit": "INR/kg",
-                    "quantity": round(rng.uniform(4000, 12000), 1),
-                    "quantity_sold": round(rng.uniform(3600, 11200), 1),
+                    "quantity": clv_arrived,
+                    "quantity_sold": clv_sold,
                     "quantity_unit": "kg",
                     "source_id": 1,
                     "source_record_id": f"SPOT-CL-{curr.isoformat()}",
