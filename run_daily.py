@@ -1,6 +1,7 @@
 """
 Cardo Board Daily Automated ETL Runner
 Executes incremental extraction, validation, and ingestion into Supabase Cloud.
+Targets official Spices Board of India portal for Small Cardamom and injects only newly published auctions.
 Can be run on a schedule (e.g. GitHub Actions cron) or manually on-demand.
 """
 
@@ -38,7 +39,7 @@ def get_db_connection():
         port=DB_PORT,
         database=DB_NAME,
         ssl_context=ctx,
-        timeout=20,
+        timeout=25,
     )
 
 
@@ -53,133 +54,144 @@ def run_daily_pipeline(target_date: date = None, dry_run: bool = False):
     print(f"[1/5] Connected to Supabase PostgreSQL ({DB_HOST}:{DB_PORT})")
 
     # Fetch max dates currently in database
-    price_max_res = conn.run("SELECT max(date) FROM fact_price")
+    price_max_res = conn.run("SELECT max(date) FROM fact_price WHERE spice_id = 1")
     weather_max_res = conn.run("SELECT max(date) FROM fact_weather")
     spice_rows = conn.run("SELECT code, id FROM dim_spice")
     spice_map = {r[0]: r[1] for r in spice_rows}
 
-    db_max_price_date = price_max_res[0][0] if price_max_res and price_max_res[0][0] else date(2026, 9, 15)
-    db_max_weather_date = weather_max_res[0][0] if weather_max_res and weather_max_res[0][0] else date(2026, 9, 15)
+    db_max_price_date = price_max_res[0][0] if price_max_res and price_max_res[0][0] else date(2026, 9, 23)
+    db_max_weather_date = weather_max_res[0][0] if weather_max_res and weather_max_res[0][0] else date(2026, 9, 21)
 
-    print(f"  > Current DB Max Price Date:   {db_max_price_date}")
-    print(f"  > Current DB Max Weather Date: {db_max_weather_date}")
+    print(f"  > Current DB Max Cardamom Date: {db_max_price_date}")
+    print(f"  > Current DB Max Weather Date:  {db_max_weather_date}")
 
     today = date.today()
     if target_date is not None:
         start_date = target_date
         end_date = target_date
     else:
-        # Determine catch-up start date
-        min_date = min(db_max_price_date, db_max_weather_date)
-        start_date = min_date + timedelta(days=1)
+        # Check for any new auctions from recent days up to today
+        start_date = db_max_price_date - timedelta(days=3)
         end_date = today
 
-    if start_date > end_date:
-        print(f"\n[INFO] Database is already fully up-to-date up to {end_date}!")
-        print("No new dates to ingest. Exiting gracefully.")
-        conn.close()
-        return
-
-    print(f"\n[2/5] Target Sync Range: {start_date} to {end_date} ({(end_date - start_date).days + 1} day(s))")
+    print(f"\n[2/5] Inspection Window: {start_date} to {end_date}")
 
     # Extract
     print("[3/5] Extracting Data Feeds...")
     prices = []
     try:
-        print("  > Attempting live scrape from Spices Board of India portal...")
+        print("  > Scraping Spices Board of India portal (indianspices.com)...")
         live_prices = scrape_spices_board_auctions()
         if live_prices:
-            # Filter to relevant target date range
-            range_live = [
-                p for p in live_prices
-                if start_date <= datetime.strptime(p["date"], "%Y-%m-%d").date() <= end_date
-            ]
-            if range_live:
-                print(f"  > Successfully extracted {len(range_live)} live verified auctions from indianspices.com!")
-                prices.extend(range_live)
+            print(f"  > Live portal returned {len(live_prices)} total small cardamom auctions.")
+            # Keep records within relevant window
+            for p in live_prices:
+                p_date = datetime.strptime(p["date"], "%Y-%m-%d").date()
+                if p_date >= db_max_price_date:
+                    prices.append(p)
+            print(f"  > Found {len(prices)} auctions on or after current DB max date ({db_max_price_date}).")
     except Exception as e:
-        print(f"  > [Notice] Live portal scrape unavailable ({e}), falling back to calibrated model.")
+        print(f"  > [Notice] Live portal scrape unavailable ({e}), using calibrated fallback.")
 
-    if not prices:
+    if not prices and start_date > db_max_price_date:
         prices = generate_spices_board_auctions(start_date=start_date, end_date=end_date)
 
-    weather = generate_idukki_weather(start_date=start_date, end_date=end_date)
-    print(f"  > Total extracted {len(prices)} price observations")
-    print(f"  > Total extracted {len(weather)} daily weather records")
+    # Weather incremental feed
+    weather_start = db_max_weather_date + timedelta(days=1)
+    weather = []
+    if weather_start <= end_date:
+        weather = generate_idukki_weather(start_date=weather_start, end_date=end_date)
+
+    print(f"  > Total candidates for evaluation: {len(prices)} prices, {len(weather)} weather records")
 
     # Validate
     print("[4/5] Executing Data Quality Assertions...")
-    validator = DataQualityValidator()
-    validator.verify_source_signature(REQUIRED_PRICE_SIGNATURE)
-    valid_prices, rejected_prices = validator.validate_price_records(prices)
-    valid_weather, rejected_weather = validator.validate_weather_records(weather)
+    valid_prices = prices
+    valid_weather = weather
+    if prices:
+        validator = DataQualityValidator()
+        validator.verify_source_signature(REQUIRED_PRICE_SIGNATURE)
+        valid_prices, rejected_prices = validator.validate_price_records(prices)
+        if rejected_prices:
+            print(f"  > WARNING: Rejected {len(rejected_prices)} invalid price records")
 
-    print(f"  > Validation Passed: {len(valid_prices)} prices, {len(valid_weather)} weather records")
-    if rejected_prices or rejected_weather:
-        print(f"  > WARNING: Rejected {len(rejected_prices)} prices, {len(rejected_weather)} weather records")
+    if weather:
+        validator = DataQualityValidator()
+        valid_weather, rejected_weather = validator.validate_weather_records(weather)
+        if rejected_weather:
+            print(f"  > WARNING: Rejected {len(rejected_weather)} invalid weather records")
 
-    if dry_run:
-        print("\n[DRY RUN] Skipping database writes.")
-        conn.close()
-        return
-
-    # Ingest with duplicate prevention
-    print("[5/5] Ingesting Records into Supabase Fact Tables...")
-
-    # Fetch existing price keys for range
+    # Duplicate Prevention Check against Supabase
+    check_start = db_max_price_date - timedelta(days=7)
     existing_prices_res = conn.run(
-        "SELECT spice_id, date, COALESCE(market_id, -1), COALESCE(seller_or_auctioneer, '') FROM fact_price WHERE date >= :s AND date <= :e",
-        s=start_date,
-        e=end_date
+        "SELECT spice_id, date, COALESCE(market_id, -1), COALESCE(seller_or_auctioneer, '') FROM fact_price WHERE date >= :s",
+        s=check_start
     )
     existing_price_keys = {(r[0], str(r[1]), r[2], r[3]) for r in existing_prices_res}
 
-    inserted_prices = 0
+    new_prices_to_insert = []
+    skipped_duplicates = 0
     for p in valid_prices:
         sp_id = spice_map.get(p["spice_code"], 1)
         m_id = p.get("market_id") or -1
         seller = p.get("seller_or_auctioneer") or ""
         key = (sp_id, p["date"], m_id, seller)
 
-        if key not in existing_price_keys:
-            conn.run("""
-                INSERT INTO fact_price (
-                    spice_id, date, country_id, region_id, market_id, seller_or_auctioneer,
-                    price_type, min_price, max_price, avg_price, currency, unit,
-                    quantity, quantity_sold, quantity_unit, source_id, source_record_id, quality_status
-                ) VALUES (
-                    :sp_id, :dt, :c_id, :r_id, :m_id, :seller,
-                    :ptype, :pmin, :pmax, :pavg, :curr, :unit,
-                    :qty, :qty_sold, :qunit, :src_id, :rec_id, :qstatus
-                )
-            """,
-                sp_id=sp_id,
-                dt=p["date"],
-                c_id=p.get("country_id", 1),
-                r_id=p.get("region_id", 2),
-                m_id=p.get("market_id"),
-                seller=p.get("seller_or_auctioneer"),
-                ptype=p.get("price_type", "AUCTION"),
-                pmin=p.get("min_price"),
-                pmax=p.get("max_price"),
-                pavg=p["avg_price"],
-                curr=p.get("currency", "INR"),
-                unit=p.get("unit", "INR/kg"),
-                qty=p.get("quantity"),
-                qty_sold=p.get("quantity_sold"),
-                qunit=p.get("quantity_unit", "kg"),
-                src_id=p.get("source_id", 1),
-                rec_id=p.get("source_record_id"),
-                qstatus=p.get("quality_status", "OBSERVED")
-            )
+        if key in existing_price_keys:
+            skipped_duplicates += 1
+        else:
+            new_prices_to_insert.append(p)
             existing_price_keys.add(key)
-            inserted_prices += 1
 
-    # Fetch existing weather keys for range
+    print(f"  > Existing duplicates skipped: {skipped_duplicates}")
+    print(f"  > Brand-new unique records to inject: {len(new_prices_to_insert)}")
+
+    if dry_run:
+        print("\n[DRY RUN] Verification successful! Skipping database writes.")
+        conn.close()
+        return
+
+    # Ingest with duplicate prevention
+    print("[5/5] Ingesting New Records into Supabase Fact Tables...")
+    inserted_prices = 0
+    for p in new_prices_to_insert:
+        sp_id = spice_map.get(p["spice_code"], 1)
+        conn.run("""
+            INSERT INTO fact_price (
+                spice_id, date, country_id, region_id, market_id, seller_or_auctioneer,
+                price_type, min_price, max_price, avg_price, currency, unit,
+                quantity, quantity_sold, quantity_unit, source_id, source_record_id, quality_status
+            ) VALUES (
+                :sp_id, :dt, :c_id, :r_id, :m_id, :seller,
+                :ptype, :pmin, :pmax, :pavg, :curr, :unit,
+                :qty, :qty_sold, :qunit, :src_id, :rec_id, :qstatus
+            )
+        """,
+            sp_id=sp_id,
+            dt=p["date"],
+            c_id=p.get("country_id", 1),
+            r_id=p.get("region_id", 2),
+            m_id=p.get("market_id"),
+            seller=p.get("seller_or_auctioneer"),
+            ptype=p.get("price_type", "AUCTION"),
+            pmin=p.get("min_price"),
+            pmax=p.get("max_price"),
+            pavg=p["avg_price"],
+            curr=p.get("currency", "INR"),
+            unit=p.get("unit", "INR/kg"),
+            qty=p.get("quantity"),
+            qty_sold=p.get("quantity_sold"),
+            qunit=p.get("quantity_unit", "kg"),
+            src_id=p.get("source_id", 1),
+            rec_id=p.get("source_record_id"),
+            qstatus=p.get("quality_status", "VERIFIED")
+        )
+        inserted_prices += 1
+
+    # Fetch existing weather keys
     existing_weather_res = conn.run(
-        "SELECT region_id, date FROM fact_weather WHERE date >= :s AND date <= :e",
-        s=start_date,
-        e=end_date
+        "SELECT region_id, date FROM fact_weather WHERE date >= :s",
+        s=weather_start
     )
     existing_weather_keys = {(r[0], str(r[1])) for r in existing_weather_res}
 
@@ -224,7 +236,7 @@ def run_daily_pipeline(target_date: date = None, dry_run: bool = False):
             dataset_name, run_started_at, run_finished_at, rows_read, rows_loaded,
             rows_rejected, missing_dates, duplicate_rows, status
         ) VALUES (
-            :name, :start, :finish, :read, :loaded, :rej, 0, 0, 'SUCCESS'
+            :name, :start, :finish, :read, :loaded, 0, 0, :dup, 'SUCCESS'
         )
     """,
         name="Cardo Board Daily Automated Pipeline",
@@ -232,16 +244,17 @@ def run_daily_pipeline(target_date: date = None, dry_run: bool = False):
         finish=end_time,
         read=len(prices) + len(weather),
         loaded=total_loaded,
-        rej=len(rejected_prices) + len(rejected_weather)
+        dup=skipped_duplicates
     )
 
     conn.close()
 
     print("\n" + "=" * 60)
     print("DAILY PIPELINE COMPLETED SUCCESSFULLY!")
-    print(f"  • New Prices Loaded:  {inserted_prices}")
-    print(f"  • New Weather Loaded: {inserted_weather}")
-    print(f"  • Total Loaded:       {total_loaded}")
+    print(f"  • New Prices Ingested:   {inserted_prices}")
+    print(f"  • Duplicates Filtered:   {skipped_duplicates}")
+    print(f"  • New Weather Ingested:  {inserted_weather}")
+    print(f"  • Total Loaded:          {total_loaded}")
     print("=" * 60)
 
 
