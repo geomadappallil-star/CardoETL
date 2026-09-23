@@ -14,6 +14,7 @@ from typing import List, Dict, Any
 import pg8000.native
 
 from extractors.spices_board import generate_spices_board_auctions
+from extractors.spices_board_live import scrape_spices_board_auctions
 from extractors.weather import generate_idukki_weather
 from validation.quality_checks import DataQualityValidator, REQUIRED_PRICE_SIGNATURE
 
@@ -83,10 +84,28 @@ def run_daily_pipeline(target_date: date = None, dry_run: bool = False):
 
     # Extract
     print("[3/5] Extracting Data Feeds...")
-    prices = generate_spices_board_auctions(start_date=start_date, end_date=end_date)
+    prices = []
+    try:
+        print("  > Attempting live scrape from Spices Board of India portal...")
+        live_prices = scrape_spices_board_auctions()
+        if live_prices:
+            # Filter to relevant target date range
+            range_live = [
+                p for p in live_prices
+                if start_date <= datetime.strptime(p["date"], "%Y-%m-%d").date() <= end_date
+            ]
+            if range_live:
+                print(f"  > Successfully extracted {len(range_live)} live verified auctions from indianspices.com!")
+                prices.extend(range_live)
+    except Exception as e:
+        print(f"  > [Notice] Live portal scrape unavailable ({e}), falling back to calibrated model.")
+
+    if not prices:
+        prices = generate_spices_board_auctions(start_date=start_date, end_date=end_date)
+
     weather = generate_idukki_weather(start_date=start_date, end_date=end_date)
-    print(f"  > Extracted {len(prices)} price observations")
-    print(f"  > Extracted {len(weather)} daily weather records")
+    print(f"  > Total extracted {len(prices)} price observations")
+    print(f"  > Total extracted {len(weather)} daily weather records")
 
     # Validate
     print("[4/5] Executing Data Quality Assertions...")

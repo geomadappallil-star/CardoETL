@@ -10,10 +10,19 @@ from datetime import date, timedelta
 from typing import List, Dict, Any
 
 AUCTIONEERS = [
+    {"name": "Spice More Trading Company, Kumily", "market": "Kumily", "market_id": 3},
+    {"name": "IDUKKI Dist.TRADITIONAL CARDAMOM PRODUCER COMPANY Ltd", "market": "Vandanmettu", "market_id": 2},
+    {"name": "THE CARDAMOM PLANTERS MARKETING CO-OPERATIVE SOCIETY LIMITED", "market": "Bodinayakanur", "market_id": 1},
+    {"name": "CLIMATE NATURAL SPICES PRIVATE LIMITED", "market": "Vandanmettu", "market_id": 2},
+    {"name": "SUGANDHAGIRI SPICES PROMOTERS&TRADERS Pvt Ltd", "market": "Bodinayakanur", "market_id": 1},
+    {"name": "SOUTH INDIAN CARDAMOM ONLINE AUCTION PRIVATE LIMITED", "market": "Vandanmettu", "market_id": 2},
+    {"name": "CARDAMOM GROWERSFOREVER PRIVATE LIMITED", "market": "Bodinayakanur", "market_id": 1},
+    {"name": "SPECIALITY INDIAN FOOD PARKS EXPORTS PRIVATE LIMITED", "market": "Vandanmettu", "market_id": 2},
+    {"name": "RNS SPICES", "market": "Bodinayakanur", "market_id": 1},
+    {"name": "IDUKKI MAHILA CARDAMOM PRODUCER COMPANY LIMITED", "market": "Vandanmettu", "market_id": 2},
+    {"name": "Green House Cardamom Mktg.India Pvt. Ltd", "market": "Bodinayakanur", "market_id": 1},
     {"name": "MAS Enterprises Ltd.", "market": "Vandanmettu", "market_id": 2},
     {"name": "South Indian Green Cardamom Co. Ltd. (SIGC)", "market": "Vandanmettu", "market_id": 2},
-    {"name": "Cardamom Planters Marketing Co-op (CPMC)", "market": "Bodinayakanur", "market_id": 1},
-    {"name": "Spice Planters Consortium Ltd. (SPCL)", "market": "Bodinayakanur", "market_id": 1},
 ]
 
 def get_macro_cardamom_base_price(current_date: date) -> float:
@@ -41,8 +50,12 @@ def get_macro_cardamom_base_price(current_date: date) -> float:
     elif t < 2024.5: # Late 2023 - mid 2024: severe heat in Western Ghats, crop deficit
         progress = (t - 2023.5) / 1.0
         base = 1450.0 + progress * 750.0
-    else: # mid 2024 - Sept 2026: Strong cardamom market ~₹2,200 - ₹2,750
-        base = 2250.0 + 180.0 * math.sin(t * 2 * math.pi) + (t - 2024.5) * 60.0
+    elif t < 2026.5: # mid 2024 to mid 2026
+        progress = (t - 2024.5) / 2.0
+        base = 2200.0 + progress * 600.0 + 120.0 * math.sin(t * 2 * math.pi)
+    else: # mid 2026 onwards: Bullish rally ~₹3,100 - ₹3,350
+        progress = min(1.0, (t - 2026.5) / 0.25)
+        base = 2800.0 + progress * 400.0 + 80.0 * math.sin(t * 4 * math.pi)
 
     return base
 
