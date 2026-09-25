@@ -19,12 +19,12 @@ from extractors.spices_board_live import scrape_spices_board_auctions
 from extractors.weather import generate_idukki_weather
 from validation.quality_checks import DataQualityValidator, REQUIRED_PRICE_SIGNATURE
 
-# Configuration from Environment Variables (with secure fallbacks)
-DB_HOST = os.environ.get("SUPABASE_DB_HOST", "aws-0-ap-northeast-1.pooler.supabase.com")
-DB_PORT = int(os.environ.get("SUPABASE_DB_PORT", "6543"))
-DB_USER = os.environ.get("SUPABASE_DB_USER", "postgres.thgczdlokjrxzakncgwd")
-DB_PASSWORD = os.environ.get("SUPABASE_DB_PASSWORD", "Madappallil@1997")
-DB_NAME = os.environ.get("SUPABASE_DB_NAME", "postgres")
+# Configuration from Environment Variables (with robust fallbacks if secrets are unset or empty strings)
+DB_HOST = os.environ.get("SUPABASE_DB_HOST") or "aws-0-ap-northeast-1.pooler.supabase.com"
+DB_PORT = int(os.environ.get("SUPABASE_DB_PORT") or "6543")
+DB_USER = os.environ.get("SUPABASE_DB_USER") or "postgres.thgczdlokjrxzakncgwd"
+DB_PASSWORD = os.environ.get("SUPABASE_DB_PASSWORD") or "Madappallil@1997"
+DB_NAME = os.environ.get("SUPABASE_DB_NAME") or "postgres"
 
 
 def get_db_connection():

@@ -2,8 +2,12 @@ name: Daily Spice Intelligence ETL
 
 on:
   schedule:
-    # Runs daily at 18:30 UTC (00:00 midnight IST), right after daytime auctions finalize
+    # 1. 14:00 UTC (19:30 IST) - Immediately after evening auctions finalize
+    - cron: '0 14 * * *'
+    # 2. 18:30 UTC (00:00 midnight IST) - Nightly reconciliation
     - cron: '30 18 * * *'
+    # 3. 03:00 UTC (08:30 AM IST) - Morning check before markets open
+    - cron: '0 3 * * *'
   workflow_dispatch: # Allows 1-click manual trigger anytime from GitHub Actions tab
 
 concurrency:
