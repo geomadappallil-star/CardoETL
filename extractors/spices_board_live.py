@@ -12,7 +12,11 @@ import ssl
 import urllib.request
 from datetime import datetime
 from typing import List, Dict, Any
-from bs4 import BeautifulSoup
+
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    BeautifulSoup = None
 
 SPICES_BOARD_DAILY_URL = "https://www.indianspices.com/marketing/price/domestic/daily-price-small.html?page=1"
 
@@ -170,6 +174,8 @@ def scrape_spices_board_auctions() -> List[Dict[str, Any]]:
             print(f"Warning: parsing auction_array1 failed ({e}), falling back to HTML table parser.")
 
     # 2. Fallback: Parse HTML table
+    if BeautifulSoup is None:
+        raise ImportError("beautifulsoup4 is required for HTML table fallback parsing.")
     soup = BeautifulSoup(html, "html.parser")
     tables = soup.find_all("table")
     if not tables:
